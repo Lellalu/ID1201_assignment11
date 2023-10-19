@@ -1,5 +1,9 @@
 package se.kth.id1201;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.ArrayList;
+
 public class T9 {
     public class Node{ 
         public Node[] next; 
@@ -10,9 +14,80 @@ public class T9 {
         } 
     }
 
-    public T9(String filename){
+    Node root;
 
+    public T9(String filename){
+        root = new Node();
+        try(BufferedReader br = new BufferedReader(new FileReader(filename))){
+            String line;
+            while((line = br.readLine()) != null){
+                add(root, line);
+            }
+        }catch(Exception e){
+            System.out.println(e);
+        }
     }
+
+    public void add(Node node, String word){
+        if(word.length() == 0){
+            node.valid = true;
+            return;
+        }
+
+        int index = charToCode(word.charAt(0));
+        if(node.next[index] == null){
+            node.next[index] = new Node();
+        }
+        add(node.next[index], word.substring(1, word.length()));
+    }
+
+    public void addW(Node root, String word){
+        char c;
+        Node node = root;
+        int index;
+        for(int i = 0; i < word.length(); i++){
+            c = word.charAt(i);
+            index = charToCode(c);
+            if(node.next[index] == null){
+                node.next[index] = new Node();
+            }
+            node = node.next[index];
+        }
+    }
+
+    public ArrayList<String> decode(String keyseq) throws InvalidCharException{
+        ArrayList<String> solutions = new ArrayList<String>();
+        collect(keyseq, root, solutions, "");
+        return solutions;
+    }
+
+    public void collect(String keyseq, Node node, ArrayList<String> solutions, String partialString) throws InvalidCharException{
+        if(keyseq.length() == 0){
+            if(node.valid){
+                solutions.add(partialString);
+            }
+            return;
+        }
+
+        char key = keyseq.charAt(0);
+        int index = keyToIndex(key);
+
+        char char1 = codeToChar(index*3);
+        char char2 = codeToChar(index*3+1);
+        char char3 = codeToChar(index*3+2);
+
+        if(node.next[index*3] != null){
+            collect(keyseq.substring(1, keyseq.length()), node.next[index*3], solutions, partialString+char1);
+        }
+        if(node.next[index*3+1] != null){
+            collect(keyseq.substring(1, keyseq.length()), node.next[index*3+1], solutions, partialString+char2);
+        }
+        if(node.next[index*3+2] != null){
+            collect(keyseq.substring(1, keyseq.length()), node.next[index*3+2], solutions, partialString+char3);
+        }
+    }
+
+
 
     private static int charToCode(char w){
         switch(w){ 
@@ -142,12 +217,14 @@ public class T9 {
         }
     }
 
-    private static int keyToIndex(char key){
+    private int keyToIndex(char key){
         return Character.getNumericValue(key)-1;
     }
 
-    private static char characterToKey(char character){
+    private char characterToKey(char character){
         int code = charToCode(character);
         return (char)(code/3 + '1');
     }
+
+
 }
